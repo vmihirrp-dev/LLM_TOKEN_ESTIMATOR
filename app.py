@@ -39,14 +39,24 @@ with col1:
     )
 
 with col2:
-    context_limit = st.selectbox(
+    # FIXED: Proper mapping
+    context_options = {
+        "ChatGPT (~128K)": 128000,
+        "Claude (~200K)": 200000,
+        "Gemini (~1M)": 1000000
+    }
+
+    selected_model = st.selectbox(
         "Context Window",
-        {
-            "ChatGPT (~128K)": 128000,
-            "Claude (~200K)": 200000,
-            "Gemini (~1M)": 1000000
-        }
+        list(context_options.keys())
     )
+
+    context_limit = context_options[selected_model]
+
+# ---------- LIVE TOKEN COUNT (NEW FEATURE) ----------
+if prompt:
+    live_tokens = count_tokens(prompt)
+    st.caption(f"🧮 Live Input Tokens: {live_tokens}")
 
 # ---------- PROCESS ----------
 if st.button("Estimate Tokens"):
@@ -56,6 +66,12 @@ if st.button("Estimate Tokens"):
         input_tokens = count_tokens(prompt)
         output_tokens = estimate_output_tokens(input_tokens, mode)
         total_tokens = input_tokens + output_tokens
+
+        # Safety check
+        if not isinstance(context_limit, int):
+            st.error("Context limit error")
+            st.stop()
+
         usage_percent = (total_tokens / context_limit) * 100
 
         st.subheader("📊 Results")
