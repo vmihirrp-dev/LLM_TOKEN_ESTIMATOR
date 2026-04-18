@@ -1,6 +1,7 @@
 import pytest
 import sys
 import types
+from contextlib import contextmanager
 
 st_stub = types.ModuleType("streamlit")
 
@@ -8,14 +9,18 @@ class _FakeCache:
     def __call__(self, fn):
         return fn
 
+class _FakeColumn:
+    def __enter__(self):
+        return self
+    def __exit__(self, *args):
+        pass
+
 st_stub.cache_resource = _FakeCache()
 st_stub.set_page_config = lambda **kw: None
 st_stub.title = lambda *a, **kw: None
 st_stub.text_area = lambda *a, **kw: ""
-st_stub.columns = lambda n: [types.SimpleNamespace(
-    __enter__=lambda s: s, __exit__=lambda s, *a: None
-)] * n
-st_stub.selectbox = lambda *a, **kw: (list(kw.get("options", a[1]))[0] if a[1:] else "")
+st_stub.columns = lambda n: [_FakeColumn() for _ in range(n)]
+st_stub.selectbox = lambda *a, **kw: (list(a[1])[0] if len(a) > 1 else "")
 st_stub.checkbox = lambda *a, **kw: kw.get("value", False)
 st_stub.button = lambda *a, **kw: False
 st_stub.caption = lambda *a, **kw: None
