@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  llm-token-estimator:
+    build: .
+    container_name: llm_token_estimator
+    ports:
+      - "8501:8501"
+    environment:
+      - STREAMLIT_SERVER_HEADLESS=true
+    restart: unless-stopped
